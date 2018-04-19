@@ -1,0 +1,35 @@
+<launch>
+
+    <arg name="imu_topic"       default="/imu" />
+    <arg name="odom_topic"      default="/odom" />
+    <arg name="static_frame"    default="/odom" />
+    <arg name="moving_frame"    default="/ego_rear_axis_middle_ground" />
+
+    <arg name="moving_avg_ax_size"      default="10" />
+    <arg name="moving_avg_ay_size"      default="10" />
+    <arg name="moving_avg_omega_size"   default="10" />
+
+    <!-- addionallty to the odom message, also broadcast tf? -->
+    <arg name="broadcast_tf" default="true" />
+
+    <!-- define nice value of process (lower means higher priority) [-20;19] -->
+    <!-- more infos: https://en.wikipedia.org/wiki/Nice_(Unix) -->
+    <arg name="nice" default="nice -n -5"/>
+
+    <!-- forward output to [screen|log] -->
+    <arg name="output" default="screen"/>
+
+    <!-- inertial navigation system -->
+    <node name="inertial_navigation_system" pkg="drive_ros_localize_inertial_navigation_system"
+          type="drive_ros_localize_inertial_navigation_system_node" output="$(arg output)" launch-prefix="$(arg nice)">
+        <remap from="~/imu_in" to="$(arg imu_topic)"/>
+        <remap from="~/odo_out" to="$(arg odom_topic)"/>
+        <param name="static_frame" type="str" value="$(arg static_frame)" />
+        <param name="moving_frame" type="str" value="$(arg moving_frame)" />
+        <param name="moving_avg_ax_size" type="int" value="$(arg moving_avg_ax_size)" />
+        <param name="moving_avg_ay_size" type="int" value="$(arg moving_avg_ay_size)" />
+        <param name="moving_avg_omega_size" type="int" value="$(arg moving_avg_omega_size)" />
+        <param name="broadcast_tf" type="boolean" value="$(arg broadcast_tf)" />
+    </node>
+
+</launch>
