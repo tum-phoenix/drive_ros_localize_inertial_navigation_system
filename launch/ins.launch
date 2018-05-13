@@ -6,7 +6,6 @@
     <arg name="moving_frame"    default="/ego_rear_axis_middle_ground" />
 
     <arg name="moving_avg_ax_size"      default="10" />
-    <arg name="moving_avg_ay_size"      default="10" />
     <arg name="moving_avg_omega_size"   default="10" />
 
     <!-- addionallty to the odom message, also broadcast tf? -->
@@ -27,7 +26,6 @@
         <param name="static_frame" type="str" value="$(arg static_frame)" />
         <param name="moving_frame" type="str" value="$(arg moving_frame)" />
         <param name="moving_avg_ax_size" type="int" value="$(arg moving_avg_ax_size)" />
-        <param name="moving_avg_ay_size" type="int" value="$(arg moving_avg_ay_size)" />
         <param name="moving_avg_omega_size" type="int" value="$(arg moving_avg_omega_size)" />
         <param name="broadcast_tf" type="boolean" value="$(arg broadcast_tf)" />
     </node>
