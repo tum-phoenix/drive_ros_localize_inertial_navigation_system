@@ -52,10 +52,10 @@ void imuCallback(const sensor_msgs::Imu& msg)
   odom.pose.pose.position.z  = 0;   // we have planar assumption
 
 
-  odom.twist.twist.linear.x = ax * dt.toSec() * std::cos(static_cast<float>(yaw))
-                            + ay * dt.toSec() * std::sin(static_cast<float>(yaw));
-  odom.twist.twist.linear.y = ax * dt.toSec() * std::sin(static_cast<float>(yaw))
-                            + ay * dt.toSec() * std::cos(static_cast<float>(yaw));
+  odom.twist.twist.linear.x += ax * dt.toSec() * std::cos(static_cast<float>(yaw))
+                             + ay * dt.toSec() * std::sin(static_cast<float>(yaw));
+  odom.twist.twist.linear.y += ax * dt.toSec() * std::sin(static_cast<float>(yaw))
+                             + ay * dt.toSec() * std::cos(static_cast<float>(yaw));
   odom.twist.twist.linear.z = 0;   // we have planar assumption
 
   odom.twist.twist.angular.x = 0;  // we have planar assumption
