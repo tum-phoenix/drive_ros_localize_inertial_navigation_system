@@ -32,7 +32,6 @@ void imuCallback(const sensor_msgs::Imu& msg)
   ros::Duration dt = (msg.header.stamp - last_time);
   odom.header.stamp = msg.header.stamp;
 
-  //ROS_INFO_STREAM(dt.toSec());
 
   double roll, pitch, yaw;
   tf::Quaternion q_old;
@@ -107,8 +106,14 @@ int main(int argc, char **argv)
   odom.header.frame_id = pnh.param<std::string>("static_frame", "/odom");
   odom.child_frame_id =  pnh.param<std::string>("moving_frame", "/ego_rear_axis_middle_ground");
   ax_avg.setFilterLength(pnh.param<int>("moving_avg_ax_size", 10));
+  ROS_INFO_STREAM("Moving avg x size: " << ax_avg.getFilterLength());
+
   ay_avg.setFilterLength(pnh.param<int>("moving_avg_ay_size", 10));
+  ROS_INFO_STREAM("Moving avg y size: " << ay_avg.getFilterLength());
+
   omega_avg.setFilterLength(pnh.param<int>("moving_avg_omega_size", 10));
+  ROS_INFO_STREAM("Moving avg omega size: " << omega_avg.getFilterLength());
+
   broadcast_tf = pnh.param<bool>("broadcast_tf", true);
 
   // setup subscriber and publisher
