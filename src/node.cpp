@@ -40,25 +40,26 @@ void imuCallback(const sensor_msgs::Imu& msg)
   double ax = ax_avg.addAndGetCrrtAvg(msg.linear_acceleration.x);
   double ay = ay_avg.addAndGetCrrtAvg(msg.linear_acceleration.y);
 
-  double ax_fixed = ax * std::cos(static_cast<float>(yaw)) +
+  // transform input
+  double ax_trans = ax * std::cos(static_cast<float>(yaw)) +
                     ay * std::sin(static_cast<float>(yaw));
 
-  double ay_fixed = ax * std::sin(static_cast<float>(yaw)) +
+  double ay_trans = ax * std::sin(static_cast<float>(yaw)) +
                     ay * std::cos(static_cast<float>(yaw));
 
-  odom.header.stamp = msg.header.stamp;
-
-  odom.pose.pose.position.x += odom.twist.twist.linear.x * dt.toSec() + ax_fixed * pow(dt.toSec(), 2) / 2.0;
-  odom.pose.pose.position.y += odom.twist.twist.linear.y * dt.toSec() + ay_fixed * pow(dt.toSec(), 2) / 2.0;
-  odom.pose.pose.position.z  = 0;   // we have planar assumption
-
-  odom.twist.twist.linear.x += ax_fixed * dt.toSec();
-  odom.twist.twist.linear.y += ay_fixed * dt.toSec();
+  odom.twist.twist.linear.x += ax_trans * dt.toSec();
+  odom.twist.twist.linear.y += ay_trans * dt.toSec();
   odom.twist.twist.linear.z = 0;   // we have planar assumption
+
+  odom.pose.pose.position.x += odom.twist.twist.linear.x * dt.toSec() + ax_trans * 0.5 * pow(dt.toSec(), 2);
+  odom.pose.pose.position.y += odom.twist.twist.linear.y * dt.toSec() + ay_trans * 0.5 * pow(dt.toSec(), 2);
+  odom.pose.pose.position.z  = 0;   // we have planar assumption
 
   odom.twist.twist.angular.x = 0;  // we have planar assumption
   odom.twist.twist.angular.y = 0;  // we have planar assumption
   odom.twist.twist.angular.z = omega;
+
+  odom.header.stamp = msg.header.stamp;
 
   // write Euler angles to new trafo
   tf::Quaternion q_new;
