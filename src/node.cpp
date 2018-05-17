@@ -13,9 +13,9 @@ tf::TransformBroadcaster* br;
 bool broadcast_tf;                       // whether to broadcast tf
 
 MovingAverage ax_avg;
+MovingAverage ay_avg;
 MovingAverage omega_avg;
 
-double velocity = 0;
 double yaw = 0;
 
 void imuCallback(const sensor_msgs::Imu& msg)
@@ -31,31 +31,35 @@ void imuCallback(const sensor_msgs::Imu& msg)
   }
 
   double omega = omega_avg.addAndGetCrrtAvg(msg.angular_velocity.z);
-
   ros::Duration dt = (msg.header.stamp - last_time);
-  odom.header.stamp = msg.header.stamp;
 
-  odom.pose.pose.position.x += odom.twist.twist.linear.x * dt.toSec();
-  odom.pose.pose.position.y += odom.twist.twist.linear.y * dt.toSec();
-  odom.pose.pose.position.z  = 0;   // we have planar assumption
+  // integrate omega
+  yaw += omega * dt.toSec();
 
-  odom.twist.twist.linear.x = velocity * std::cos(static_cast<float>(yaw));
-  odom.twist.twist.linear.y = velocity * std::sin(static_cast<float>(yaw));
+  // integrate acceleration
+  double ax = ax_avg.addAndGetCrrtAvg(msg.linear_acceleration.x);
+  double ay = ay_avg.addAndGetCrrtAvg(msg.linear_acceleration.y);
+
+  // transform input
+  double ax_trans = ax * std::cos(static_cast<float>(yaw)) +
+                    ay * std::sin(static_cast<float>(yaw));
+
+  double ay_trans = ax * std::sin(static_cast<float>(yaw)) +
+                    ay * std::cos(static_cast<float>(yaw));
+
+  odom.twist.twist.linear.x += ax_trans * dt.toSec();
+  odom.twist.twist.linear.y += ay_trans * dt.toSec();
   odom.twist.twist.linear.z = 0;   // we have planar assumption
+
+  odom.pose.pose.position.x += odom.twist.twist.linear.x * dt.toSec() + ax_trans * 0.5 * pow(dt.toSec(), 2);
+  odom.pose.pose.position.y += odom.twist.twist.linear.y * dt.toSec() + ay_trans * 0.5 * pow(dt.toSec(), 2);
+  odom.pose.pose.position.z  = 0;   // we have planar assumption
 
   odom.twist.twist.angular.x = 0;  // we have planar assumption
   odom.twist.twist.angular.y = 0;  // we have planar assumption
   odom.twist.twist.angular.z = omega;
 
-
-
-  // integrate acceleration
-  double ax = ax_avg.addAndGetCrrtAvg(msg.linear_acceleration.x);
-  velocity += ax * dt.toSec();
-
-
-  // integrate omega
-  yaw += omega * dt.toSec();
+  odom.header.stamp = msg.header.stamp;
 
   // write Euler angles to new trafo
   tf::Quaternion q_new;
@@ -98,8 +102,9 @@ int main(int argc, char **argv)
   odom.header.frame_id = pnh.param<std::string>("static_frame", "/odom");
   odom.child_frame_id =  pnh.param<std::string>("moving_frame", "/ego_rear_axis_middle_ground");
 
-  ax_avg.setFilterLength(pnh.param<int>("moving_avg_ax_size", 10));
-  ROS_INFO_STREAM("Moving avg x size: " << ax_avg.getFilterLength());
+  ax_avg.setFilterLength(pnh.param<int>("moving_avg_a_size", 10));
+  ay_avg.setFilterLength(pnh.param<int>("moving_avg_a_size", 10));
+  ROS_INFO_STREAM("Moving avg a size: " << ax_avg.getFilterLength());
 
   omega_avg.setFilterLength(pnh.param<int>("moving_avg_omega_size", 10));
   ROS_INFO_STREAM("Moving avg omega size: " << omega_avg.getFilterLength());
