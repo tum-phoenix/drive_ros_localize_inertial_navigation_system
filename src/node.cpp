@@ -155,15 +155,15 @@ void imuCallback(const sensor_msgs::Imu& msg)
   // jacobians
   Eigen::Matrix<double, 5, 5> G;
   Eigen::Matrix<double, 5, 3> W;
-  G.Zero();
-  W.Zero();
+  G.setZero();
+  W.setZero();
 
   calculateG(G, dt.toSec(), omega, yaw, ax, ay);
   calculateW(W, dt.toSec(), omega, yaw, ax, ay);
 
   // system noise
   Eigen::Matrix<double, 3, 3> R;
-  R.Zero();
+  R.setZero();
   R(AX,     AX)     = msg.linear_acceleration_covariance[CovElem::lin::linX_linX];
   R(AY,     AY)     = msg.linear_acceleration_covariance[CovElem::lin::linY_linY];
   R(OMEGAZ, OMEGAZ) = msg.angular_velocity_covariance[CovElem::ang::angZ_angZ];
